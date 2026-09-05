@@ -2629,7 +2629,7 @@ public final class MobileShellComposite: MobileTerminalOutputSinking {
         guard !trimmedCode.isEmpty else {
             return false
         }
-<        if CmxPairingURLSchemeResolver().accepts(urlString: trimmedCode) {
+        if CmxPairingURLSchemeResolver().accepts(urlString: trimmedCode) {
             return false
         }
         let attemptID = beginPairingAttempt()
