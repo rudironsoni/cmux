@@ -19,4 +19,20 @@ import Testing
     func acceptsOnlyPairingLinks(code: String, expected: Bool) {
         #expect(MobilePairingScannerPolicy.acceptsCode(code) == expected)
     }
+
+    @Test func acceptsOwnBundleSchemeAndRejectsForeign() {
+        let code = "cmux-ios-dev.rudironsoni.cmux://attach?v=2&r=100.64.0.5:58465"
+        #expect(
+            MobilePairingScannerPolicy.acceptsCode(
+                code,
+                selfBundleIdentifier: "dev.rudironsoni.cmux"
+            )
+        )
+        #expect(
+            !MobilePairingScannerPolicy.acceptsCode(
+                code,
+                selfBundleIdentifier: "com.cmux.app"
+            )
+        )
+    }
 }

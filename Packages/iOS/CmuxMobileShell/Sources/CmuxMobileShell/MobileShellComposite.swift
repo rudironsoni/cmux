@@ -2629,7 +2629,7 @@ public final class MobileShellComposite: MobileTerminalOutputSinking {
         guard !trimmedCode.isEmpty else {
             return false
         }
-        if CmxPairingURLScheme(urlString: trimmedCode) != nil {
+<        if CmxPairingURLSchemeResolver().accepts(urlString: trimmedCode) {
             return false
         }
         let attemptID = beginPairingAttempt()
@@ -2658,7 +2658,7 @@ public final class MobileShellComposite: MobileTerminalOutputSinking {
         guard !trimmedCode.isEmpty else {
             return .failed
         }
-        if CmxPairingURLScheme(urlString: trimmedCode) != nil {
+        if CmxPairingURLSchemeResolver().accepts(urlString: trimmedCode) {
             // The pairing input field is an explicit in-app code entry (scan
             // or paste), the act that authorizes a compatibility Tailscale dial.
             return await connectPairingURLResult(

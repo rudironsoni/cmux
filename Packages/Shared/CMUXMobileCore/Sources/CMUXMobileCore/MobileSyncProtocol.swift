@@ -124,7 +124,7 @@ public struct MobileSyncPairingPayload: Equatable, Sendable, Codable {
     }
 
     public static func decodeURL(_ url: URL, now: Date = Date()) throws -> MobileSyncPairingPayload {
-        guard CmxPairingURLScheme(rawValue: url.scheme) != nil,
+        guard CmxPairingURLSchemeResolver().accepts(scheme: url.scheme),
               url.host == "pair",
               let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
               let encodedPayload = components.queryItems?.first(where: { $0.name == "payload" })?.value,

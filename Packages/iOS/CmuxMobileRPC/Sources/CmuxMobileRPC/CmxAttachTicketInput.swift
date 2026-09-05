@@ -19,17 +19,28 @@ public struct CmxAttachTicketInput {
     ///   `MobileSyncPairingPayloadError.loopbackRouteRejected` for a v2
     ///   pairing code whose routes point at the phone itself.
     public static func decode(_ rawValue: String) throws -> CmxAttachTicket {
+        try decode(rawValue, selfBundleIdentifier: Bundle.main.bundleIdentifier)
+    }
+
+    static func decode(_ rawValue: String, selfBundleIdentifier: String?) throws -> CmxAttachTicket {
         guard let url = URL(string: rawValue) else {
             throw MobileSyncPairingPayloadError.invalidURL
         }
         // Accept any channel's pairing scheme (cmux-ios for release builds,
-        // cmux-ios-dev for development); cross-channel pairing still works when
-        // the user scans from inside the app. The emitter picks the matching
-        // scheme so the *system camera* routes each channel's QR to its build.
-        if CmxPairingURLScheme(rawValue: url.scheme) != nil, url.host == "pair" {
+        // cmux-ios-dev for development), plus this build's own bundle scheme;
+        // cross-channel pairing still works when the user scans from inside
+        // the app. The emitter picks the matching scheme so the *system camera*
+        // routes each channel's QR to its build.
+        if CmxPairingURLScheme.accepting(
+            rawValue: url.scheme,
+            selfBundleIdentifier: selfBundleIdentifier
+        ) != nil, url.host == "pair" {
             return try ticket(from: MobileSyncPairingPayload.decodeURL(url))
         }
-        guard CmxPairingURLScheme(rawValue: url.scheme) != nil,
+        guard CmxPairingURLScheme.accepting(
+            rawValue: url.scheme,
+            selfBundleIdentifier: selfBundleIdentifier
+        ) != nil,
               url.host == "attach",
               let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
             throw MobileSyncPairingPayloadError.invalidURL

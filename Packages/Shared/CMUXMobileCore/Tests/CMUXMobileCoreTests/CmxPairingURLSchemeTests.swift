@@ -24,13 +24,18 @@ import Testing
         )
     }
 
-    @Test func invalidIdentityDoesNotFallBackToAnotherApp() {
+    @Test func anyValidBundleEmitsItsOwnScheme() {
         #expect(CmxPairingURLScheme(iOSBundleIdentifier: "") == nil)
         #expect(CmxPairingURLScheme(iOSBundleIdentifier: "invalid bundle") == nil)
         #expect(
             CmxPairingURLScheme(
                 iOSBundleIdentifier: "dev.cmux.app.unrecognized"
-            ) == nil
+            )?.rawValue == "cmux-ios-dev.cmux.app.unrecognized"
+        )
+        #expect(
+            CmxPairingURLScheme(
+                iOSBundleIdentifier: "dev.rudironsoni.cmux"
+            )?.rawValue == "cmux-ios-dev.rudironsoni.cmux"
         )
         #if !os(iOS)
         #expect(
@@ -42,6 +47,57 @@ import Testing
             ).resolved == nil
         )
         #endif
+    }
+
+    @Test func acceptingAcceptsAuthoritativeLanesAndSelfScheme() {
+        #expect(
+            CmxPairingURLScheme.accepting(
+                rawValue: "cmux-ios-dev.cmux.app.internal",
+                selfBundleIdentifier: nil
+            ) != nil
+        )
+        #expect(
+            CmxPairingURLScheme.accepting(
+                rawValue: "cmux-ios-dev.rudironsoni.cmux",
+                selfBundleIdentifier: "dev.rudironsoni.cmux"
+            )?.rawValue == "cmux-ios-dev.rudironsoni.cmux"
+        )
+    }
+
+    @Test func acceptingRejectsForeignSchemes() {
+        #expect(
+            CmxPairingURLScheme.accepting(
+                rawValue: "cmux-ios-dev.rudironsoni.cmux",
+                selfBundleIdentifier: nil
+            ) == nil
+        )
+        #expect(
+            CmxPairingURLScheme.accepting(
+                rawValue: "cmux-ios-dev.rudironsoni.cmux",
+                selfBundleIdentifier: "com.cmux.app"
+            ) == nil
+        )
+        #expect(
+            CmxPairingURLScheme.accepting(
+                rawValue: "https",
+                selfBundleIdentifier: "dev.rudironsoni.cmux"
+            ) == nil
+        )
+    }
+
+    @Test func acceptingURLStringAcceptsSelfScheme() {
+        #expect(
+            CmxPairingURLScheme.accepting(
+                urlString: "cmux-ios-dev.rudironsoni.cmux://attach?v=2&r=100.64.0.5:58465",
+                selfBundleIdentifier: "dev.rudironsoni.cmux"
+            ) != nil
+        )
+        #expect(
+            CmxPairingURLScheme.accepting(
+                urlString: "https://example.com",
+                selfBundleIdentifier: "dev.rudironsoni.cmux"
+            ) == nil
+        )
     }
 
     #if !os(iOS)

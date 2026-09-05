@@ -244,6 +244,23 @@ import Testing
         }
     }
 
+    @Test func decodesOwnBundleSchemeAndRejectsForeign() throws {
+        let url = "cmux-ios-dev.rudironsoni.cmux://attach?v=2&r=100.64.0.5:58465"
+        let decoded = try CmxAttachTicketInput.decode(
+            url,
+            selfBundleIdentifier: "dev.rudironsoni.cmux"
+        )
+        #expect(decoded.routes.count == 1)
+        #expect(decoded.routes.first?.kind == .tailscale)
+
+        #expect(throws: MobileSyncPairingPayloadError.invalidURL) {
+            try CmxAttachTicketInput.decode(
+                url,
+                selfBundleIdentifier: "com.cmux.app"
+            )
+        }
+    }
+
     @Test func newerGrammarVersionThrowsUnrecognizedVersion() {
         // A QR minted by a newer cmux whose grammar version this build predates
         // (the field report: beta 1.0.2 scanned a v2 QR a newer Mac emitted).

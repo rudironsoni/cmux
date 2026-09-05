@@ -39,6 +39,25 @@ public struct CmxPairingURLSchemeResolver: Sendable {
         self.isDevelopmentBuild = isDevelopmentBuild
     }
 
+    /// Whether `scheme` is an authoritative lane scheme or the exact scheme
+    /// this process emits (its own bundle on iOS, its target bundle on macOS).
+    public func accepts(scheme: String?) -> Bool {
+        CmxPairingURLScheme.accepting(
+            rawValue: scheme,
+            selfBundleIdentifier: targetIOSBundleIdentifier
+                ?? currentIOSBundleIdentifier
+        ) != nil
+    }
+
+    /// Whether `urlString` is a pairing URL this process accepts.
+    public func accepts(urlString: String?) -> Bool {
+        CmxPairingURLScheme.accepting(
+            urlString: urlString,
+            selfBundleIdentifier: targetIOSBundleIdentifier
+                ?? currentIOSBundleIdentifier
+        ) != nil
+    }
+
     /// The exact scheme this process should emit, or `nil` on invalid identity.
     public var resolved: CmxPairingURLScheme? {
         #if os(iOS)

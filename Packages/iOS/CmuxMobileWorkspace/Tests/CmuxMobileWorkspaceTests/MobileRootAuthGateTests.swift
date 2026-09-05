@@ -27,6 +27,24 @@ import Testing
         #expect(!MobileRootAuthGate.isAttachURL(otherURL))
     }
 
+    @Test func recognizesOwnBundleAttachURL() throws {
+        let own = try #require(
+            URL(string: "cmux-ios-dev.rudironsoni.cmux://attach?v=2&r=100.64.0.5:58465")
+        )
+        #expect(
+            MobileRootAuthGate.isAttachURL(
+                own,
+                selfBundleIdentifier: "dev.rudironsoni.cmux"
+            )
+        )
+        #expect(
+            !MobileRootAuthGate.isAttachURL(
+                own,
+                selfBundleIdentifier: "com.cmux.app"
+            )
+        )
+    }
+
     @Test func showsRestoringSessionOnlyBeforeAuthentication() {
         #expect(MobileRootAuthGate.shouldShowRestoringSession(
             stackAuthenticated: false,

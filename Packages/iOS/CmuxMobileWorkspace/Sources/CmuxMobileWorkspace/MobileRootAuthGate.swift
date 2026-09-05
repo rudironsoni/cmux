@@ -70,7 +70,14 @@ public struct MobileRootAuthGate {
     /// - Parameter url: The URL to classify.
     /// - Returns: `true` when the URL is an attach deep link.
     public static func isAttachURL(_ url: URL) -> Bool {
-        guard CmxPairingURLScheme(rawValue: url.scheme) != nil else {
+        isAttachURL(url, selfBundleIdentifier: Bundle.main.bundleIdentifier)
+    }
+
+    static func isAttachURL(_ url: URL, selfBundleIdentifier: String?) -> Bool {
+        guard CmxPairingURLScheme.accepting(
+            rawValue: url.scheme,
+            selfBundleIdentifier: selfBundleIdentifier
+        ) != nil else {
             return false
         }
         return url.host?.caseInsensitiveCompare("attach") == .orderedSame
