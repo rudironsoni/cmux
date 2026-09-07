@@ -5,7 +5,7 @@ internal import Foundation
 extension MobileShellComposite {
     static func normalizedPairingURL(_ rawValue: String) -> String {
         let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard CmxPairingURLScheme(urlString: trimmed) != nil else {
+        guard CmxPairingURLSchemeResolver().accepts(urlString: trimmed) else {
             return trimmed
         }
         let scalars = trimmed.unicodeScalars.filter {

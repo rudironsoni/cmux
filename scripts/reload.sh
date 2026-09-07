@@ -9,6 +9,7 @@ source "$SCRIPT_DIR/lib/dev-secrets.sh"
 
 APP_NAME="cmux DEV"
 BUNDLE_ID="com.cmuxterm.app.debug"
+TEAM_ID="${CMUX_TEAM_ID:-}"
 BASE_APP_NAME="cmux DEV"
 DERIVED_DATA=""
 NAME_SET=0
@@ -893,6 +894,8 @@ Options:
                          Install the cmux-tui client from this immutable manifest.
   --name <app name>      Override app display/bundle name.
   --bundle-id <id>       Override bundle identifier.
+  --team-id <id>         Override development team (also sets CMUX_TEAM_ID_PREFIX).
+                         Defaults from $CMUX_TEAM_ID when set.
   --derived-data <path>  Override derived data path.
   --no-global-cli-links  Do not update /tmp/cmux-cli, /tmp/cmux-last-cli-path,
                          or PATH cmux-dev shims. Useful for isolated dogfood.
@@ -1118,6 +1121,14 @@ while [[ $# -gt 0 ]]; do
         exit 1
       fi
       BUNDLE_SET=1
+      shift 2
+      ;;
+    --team-id)
+      TEAM_ID="${2:-}"
+      if [[ -z "$TEAM_ID" ]]; then
+        echo "error: --team-id requires a value" >&2
+        exit 1
+      fi
       shift 2
       ;;
     --launch)
@@ -1399,6 +1410,14 @@ if [[ -z "$TAG" ]]; then
   )
 fi
 XCODEBUILD_ARGS+=(PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID")
+# A fork signing with its own Apple team passes --team-id (or CMUX_TEAM_ID).
+# Forward it as DEVELOPMENT_TEAM plus the Mach-service prefix the tunnel
+# extension's NEMachServiceName derives from, so a custom team need not edit
+# the project. Empty keeps the ad-hoc default.
+if [[ -n "${TEAM_ID:-}" ]]; then
+  XCODEBUILD_ARGS+=(DEVELOPMENT_TEAM="$TEAM_ID")
+  XCODEBUILD_ARGS+=(CMUX_TEAM_ID_PREFIX="${TEAM_ID}.")
+fi
 # The helper is assembled before Xcode emits the host's processed Info.plist.
 # Pass the final tagged display name explicitly so its TCC entry matches the
 # app the user is dogfooding instead of falling back to the untagged product.

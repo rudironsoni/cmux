@@ -81,6 +81,15 @@ unset CMUXD_UNIX_PATH
 unset CMUX_DEBUG_LOG
 export CMUX_SOCKET_PATH="$socket_path"
 export CMUX_TAG="$tag_slug"
-export CMUX_BUNDLE_ID="com.cmuxterm.app.debug.${tag_bundle_id}"
+# reload.sh --bundle-id bakes the effective id into the staged Info.plist
+# (LSEnvironment CMUX_BUNDLE_ID). Prefer it so forks building under their own
+# identifier address the right app; an explicit CMUX_BUNDLE_ID still wins.
+default_bundle_id="com.cmuxterm.app.debug.${tag_bundle_id}"
+bundle_app="${cli_path%/Contents/Resources/bin/cmux}"
+plist_bundle_id=""
+if [[ -z "${CMUX_BUNDLE_ID:-}" && -f "$bundle_app/Contents/Info.plist" ]]; then
+  plist_bundle_id="$(/usr/libexec/PlistBuddy -c 'Print :LSEnvironment:CMUX_BUNDLE_ID' "$bundle_app/Contents/Info.plist" 2>/dev/null || true)"
+fi
+export CMUX_BUNDLE_ID="${CMUX_BUNDLE_ID:-${plist_bundle_id:-$default_bundle_id}}"
 export CMUX_BUNDLED_CLI_PATH="$cli_path"
 exec "$cli_path" "$@"

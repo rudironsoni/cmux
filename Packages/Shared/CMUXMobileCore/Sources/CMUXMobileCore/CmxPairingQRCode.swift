@@ -243,7 +243,7 @@ public struct CmxPairingQRCode: Sendable {
     /// the minimal grammar).
     public func isPairingCodeURLString(_ rawValue: String) -> Bool {
         guard let url = URL(string: rawValue),
-              CmxPairingURLScheme(rawValue: url.scheme) != nil,
+              CmxPairingURLSchemeResolver().accepts(scheme: url.scheme),
               url.host == "attach",
               let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
             return false

@@ -11,19 +11,21 @@ public struct CmxPairingURLScheme {
     public let rawValue: String
 
     /// Creates the exact scheme registered by one installed iOS bundle.
+    ///
+    /// Any valid bundle identifier maps to its own scheme; the bundle is the
+    /// namespace, so an app always registers exactly its own bundle-derived
+    /// scheme regardless of distribution lane.
     public init?(iOSBundleIdentifier: String?) {
         guard let namespace = MobileIOSAppNamespace(
             bundleIdentifier: iOSBundleIdentifier
         ) else {
             return nil
         }
-        let scheme = namespace.pairingURLScheme.lowercased()
-        guard Self.releaseSchemes.contains(scheme)
-                || scheme == Self.untaggedDevelopmentScheme
-                || scheme.hasPrefix(Self.developmentPrefix) else {
-            return nil
-        }
-        rawValue = scheme
+        self.init(namespace: namespace)
+    }
+
+    private init(namespace: MobileIOSAppNamespace) {
+        rawValue = namespace.pairingURLScheme.lowercased()
     }
 
     /// Parses a classifiable bundle-specific or historical shared pairing
@@ -57,6 +59,42 @@ public struct CmxPairingURLScheme {
             return nil
         }
         self = scheme
+    }
+
+    /// Accepts a pairing scheme when it is an authoritative lane scheme or the
+    /// exact scheme derived from the caller's own bundle identifier. Unknown
+    /// foreign schemes still fail closed.
+    public static func accepting(
+        rawValue: String?,
+        selfBundleIdentifier: String?
+    ) -> CmxPairingURLScheme? {
+        if let lane = CmxPairingURLScheme(rawValue: rawValue) {
+            return lane
+        }
+        guard let selfBundleIdentifier,
+              let namespace = MobileIOSAppNamespace(
+                  bundleIdentifier: selfBundleIdentifier
+              ) else {
+            return nil
+        }
+        guard rawValue?.lowercased() == namespace.pairingURLScheme.lowercased() else {
+            return nil
+        }
+        return CmxPairingURLScheme(namespace: namespace)
+    }
+
+    /// Accepts a pairing URL when its scheme is an authoritative lane or the
+    /// caller's own bundle-derived scheme.
+    public static func accepting(
+        urlString: String?,
+        selfBundleIdentifier: String?
+    ) -> CmxPairingURLScheme? {
+        guard let urlString, urlString.contains("://"),
+              let components = URLComponents(string: urlString),
+              let scheme = components.scheme else {
+            return nil
+        }
+        return accepting(rawValue: scheme, selfBundleIdentifier: selfBundleIdentifier)
     }
 
     /// Whether this scheme identifies a tagged iOS development build.
